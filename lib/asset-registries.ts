@@ -6,6 +6,12 @@ export type RegistryOption = {
   slug: string;
 };
 
+export type AssetRegistryOptions = {
+  providers: RegistryOption[];
+  owners: RegistryOption[];
+  tags: RegistryOption[];
+};
+
 export const defaultProviders = [
   "AWS",
   "Hetzner",
@@ -45,7 +51,7 @@ function slugify(value: string) {
   );
 }
 
-function staticOptions(values: readonly string[]) {
+function staticOptions(values: readonly string[]): RegistryOption[] {
   return values.map((name) => ({
     id: slugify(name),
     name,
@@ -62,7 +68,7 @@ async function getPrismaClient() {
   return prisma;
 }
 
-export async function getAssetRegistryOptions() {
+export async function getAssetRegistryOptions(): Promise<AssetRegistryOptions> {
   try {
     const prisma = await getPrismaClient();
 
