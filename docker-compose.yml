@@ -1,0 +1,32 @@
+services:
+  server-asset-hub:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: server-asset-hub
+    environment:
+      DATABASE_URL: postgresql://server_asset_hub:server_asset_hub_dev@postgres:5432/server_asset_hub?schema=public
+    ports:
+      - "3010:3000"
+    volumes:
+      - ./data:/app/data
+      - ./uploads:/app/uploads
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: server-asset-hub-postgres
+    environment:
+      POSTGRES_DB: server_asset_hub
+      POSTGRES_USER: server_asset_hub
+      POSTGRES_PASSWORD: server_asset_hub_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
