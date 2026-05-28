@@ -1,10 +1,10 @@
 "use server";
 
-import type { AutomationRuleStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import {
   automationInputFromFormData,
+  type AutomationRuleStatus,
   createAutomationRule,
   recordAutomationExecution,
   safeDeleteAutomationRule,

@@ -4,12 +4,14 @@ import type {
   AutomationCategory,
   AutomationExecutionSource,
   AutomationExecutionStatus,
-  AutomationRuleStatus,
   AutomationSeverity,
   AutomationTriggerType,
   Prisma,
 } from "@prisma/client";
 import { createOperationalEvent } from "@/lib/operational-events-db";
+
+export type AutomationRuleStatus =
+  Prisma.AutomationRuleGetPayload<{}>["status"];
 
 export type AutomationRuleSummary = {
   id: string;
