@@ -1,0 +1,465 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum AssetType {
+  DOMAIN
+  SERVER
+  CLOUD
+  DNS
+  SSL
+  EMAIL
+  CONTAINER
+  DATABASE
+  VPN
+  OTHER
+  VPS
+  HOSTING
+  PANEL
+}
+
+enum AssetStatus {
+  ACTIVE
+  EXPIRED
+  RENEW_SOON
+  ARCHIVED
+}
+
+enum AssetEnvironment {
+  PRODUCTION
+  STAGING
+  DEVELOPMENT
+  TESTING
+}
+
+enum AssetLifecycleState {
+  ACTIVE
+  MONITORING
+  EXPIRING
+  ARCHIVED
+  RETIRED
+  SUSPENDED
+}
+
+enum BillingCycle {
+  MONTHLY
+  QUARTERLY
+  SEMIANNUAL
+  YEARLY
+  ONE_TIME
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  OPERATOR
+  FINANCE
+  VIEWER
+}
+
+enum TeamMemberRole {
+  OWNER
+  MEMBER
+  VIEWER
+}
+
+enum OperationalEventType {
+  ASSET_CREATED
+  ASSET_UPDATED
+  ASSET_DELETED
+  ALERT_TRIGGERED
+  ALERT_ACKNOWLEDGED
+  SSL_EXPIRY_DETECTED
+  HEALTH_CHECK_RUN
+  HEALTH_DEGRADED
+  RUNTIME_OFFLINE
+  RUNTIME_ONLINE
+  CREDENTIAL_CREATED
+  CREDENTIAL_UPDATED
+  CREDENTIAL_DELETED
+  ATTACHMENT_ADDED
+  ATTACHMENT_DELETED
+  ASSET_ARCHIVED
+  ASSET_RESTORED
+  ASSET_SOFT_DELETED
+  ASSET_PERMANENT_DELETE_ATTEMPT
+  LIFECYCLE_STATE_CHANGED
+  AUTOMATION_RULE_CREATED
+  AUTOMATION_RULE_UPDATED
+  AUTOMATION_RULE_DISABLED
+  AUTOMATION_RULE_DELETED
+  AUTOMATION_EXECUTION_RECORDED
+  SYSTEM_SEEDED
+}
+
+enum OperationalEventSeverity {
+  INFO
+  WARNING
+  CRITICAL
+}
+
+enum OperationalEventSource {
+  SYSTEM
+  USER
+  MONITOR
+  ALERT_ENGINE
+}
+
+enum AutomationRuleStatus {
+  ACTIVE
+  PAUSED
+  DRAFT
+  FAILED
+  DISABLED
+}
+
+enum AutomationTriggerType {
+  SCHEDULE
+  ALERT
+  RENEWAL
+  COST_THRESHOLD
+  LIFECYCLE_CHANGE
+  MANUAL
+}
+
+enum AutomationExecutionStatus {
+  QUEUED
+  RUNNING
+  SUCCEEDED
+  FAILED
+  SKIPPED
+  BLOCKED
+}
+
+enum AutomationExecutionSource {
+  MANUAL
+  SCHEDULER
+  SYSTEM
+  PREVIEW
+}
+
+enum AutomationSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum AutomationCategory {
+  SCHEDULED_CHECKS
+  RENEWAL_REMINDERS
+  ALERT_ESCALATIONS
+  COST_GOVERNANCE
+  OWNERSHIP_FOLLOW_UPS
+  OPERATIONAL_REVIEWS
+  LIFECYCLE_GOVERNANCE
+}
+
+model Asset {
+  id            String      @id @default(uuid())
+  name          String
+  type          AssetType
+  environment   AssetEnvironment @default(PRODUCTION)
+  provider      String
+  providerId    String?
+  owner         String
+  ownerId       String?
+  teamId        String?
+  operationalOwner String?
+  financeOwner String?
+  renewalOwner String?
+  escalationOwner String?
+  region        String?
+  domain        String?
+  ipAddress     String?
+  purchaseDate  DateTime    @db.Date
+  renewalDate   DateTime    @db.Date
+  purpose       String
+  description   String
+  estimatedCost Decimal     @db.Decimal(12, 2)
+  currency      String      @db.VarChar(3)
+  billingCycle  BillingCycle @default(YEARLY)
+  monthlyCost   Decimal?    @db.Decimal(12, 2)
+  yearlyCost    Decimal?    @db.Decimal(12, 2)
+  oneTimeCost   Decimal?    @db.Decimal(12, 2)
+  billingAccount String?
+  costCenter    String?
+  costNotes     String?
+  lifecycleState AssetLifecycleState @default(ACTIVE)
+  archivedAt    DateTime?
+  archivedBy    String?
+  archiveReason String?
+  deletedAt     DateTime?
+  deletedBy     String?
+  lifecycleUpdatedAt DateTime?
+  status        AssetStatus
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  credentials AssetCredential[]
+  attachments AssetAttachment[]
+  healthChecks AssetHealthCheck[]
+  alerts AssetAlert[]
+  providerRegistry AssetProvider? @relation(fields: [providerId], references: [id], onDelete: SetNull)
+  ownerRegistry AssetOwner? @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  team Team? @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  tags AssetTag[]
+  operationalEvents OperationalEvent[]
+
+  @@index([renewalDate])
+  @@index([status])
+  @@index([lifecycleState])
+  @@index([deletedAt])
+  @@index([type])
+  @@index([environment])
+  @@index([providerId])
+  @@index([ownerId])
+  @@index([teamId])
+  @@index([region])
+}
+
+model AutomationRule {
+  id              String               @id @default(cuid())
+  name            String
+  description     String
+  action          String
+  status          AutomationRuleStatus @default(DRAFT)
+  severity        AutomationSeverity   @default(MEDIUM)
+  category        AutomationCategory
+  owner           String
+  teamId          String?
+  escalationOwner String?
+  createdBy       String?
+  updatedBy       String?
+  deletedAt       DateTime?
+  deletedBy       String?
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+
+  team Team? @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  triggers AutomationTrigger[]
+  schedules AutomationSchedule[]
+  executions AutomationExecution[]
+
+  @@index([status])
+  @@index([category])
+  @@index([severity])
+  @@index([teamId])
+  @@index([deletedAt])
+}
+
+model AutomationTrigger {
+  id          String                @id @default(cuid())
+  ruleId      String
+  type        AutomationTriggerType
+  label       String
+  config      Json?
+  enabled     Boolean               @default(true)
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+
+  rule AutomationRule @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+
+  @@index([ruleId])
+  @@index([type])
+  @@index([enabled])
+}
+
+model AutomationSchedule {
+  id          String   @id @default(cuid())
+  ruleId      String
+  label       String
+  cadence     String
+  timezone    String   @default("UTC")
+  nextRunAt   DateTime?
+  lastRunAt   DateTime?
+  enabled     Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  rule AutomationRule @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+
+  @@index([ruleId])
+  @@index([enabled])
+  @@index([nextRunAt])
+}
+
+model AutomationExecution {
+  id           String                    @id @default(cuid())
+  ruleId       String
+  status       AutomationExecutionStatus @default(QUEUED)
+  result       String?
+  logs         Json?
+  triggeredBy  String?
+  source       AutomationExecutionSource
+  startedAt    DateTime?
+  completedAt  DateTime?
+  durationMs   Int?
+  createdAt    DateTime                  @default(now())
+
+  rule AutomationRule @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+
+  @@index([ruleId])
+  @@index([status])
+  @@index([source])
+  @@index([createdAt])
+}
+
+model OperationalEvent {
+  id          String                   @id @default(cuid())
+  assetId     String?
+  assetName   String?
+  eventType   OperationalEventType
+  severity    OperationalEventSeverity
+  title       String
+  description String
+  metadata    Json?
+  actor       String?
+  source      OperationalEventSource
+  createdAt   DateTime                 @default(now())
+
+  asset Asset? @relation(fields: [assetId], references: [id], onDelete: SetNull)
+
+  @@index([assetId])
+  @@index([eventType])
+  @@index([severity])
+  @@index([source])
+  @@index([createdAt])
+}
+
+model AssetProvider {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  assets Asset[]
+}
+
+model AssetOwner {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  assets Asset[]
+}
+
+model AssetTag {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  assets Asset[]
+}
+
+model AssetAlert {
+  id           String   @id @default(cuid())
+  assetId      String?
+  type         String
+  severity     String
+  title        String
+  message      String
+  acknowledged Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  asset Asset? @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@index([assetId])
+  @@index([severity])
+  @@index([createdAt])
+}
+
+model AssetHealthCheck {
+  id           String   @id @default(cuid())
+  assetId      String
+  status       String
+  responseTime Int?
+  checkedAt    DateTime @default(now())
+
+  asset Asset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@index([assetId])
+  @@index([checkedAt])
+}
+
+model AssetAttachment {
+  id           String   @id @default(cuid())
+  assetId      String
+  filename     String
+  originalName String
+  mimeType     String
+  sizeBytes    Int
+  path         String
+  createdAt    DateTime @default(now())
+
+  asset Asset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@index([assetId])
+}
+
+model AssetCredential {
+  id        String   @id @default(cuid())
+  assetId   String
+  label     String
+  username  String?
+  secret    String
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  asset Asset @relation(fields: [assetId], references: [id], onDelete: Cascade)
+
+  @@index([assetId])
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  role      UserRole @default(VIEWER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  teamMemberships TeamMembership[]
+  ownedTeams Team[] @relation("TeamOwner")
+}
+
+model Team {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  ownerId     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  owner User? @relation("TeamOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  members TeamMembership[]
+  assets Asset[]
+  automationRules AutomationRule[]
+
+  @@index([ownerId])
+}
+
+model TeamMembership {
+  id        String         @id @default(cuid())
+  userId    String
+  teamId    String
+  role      TeamMemberRole @default(MEMBER)
+  createdAt DateTime       @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, teamId])
+  @@index([teamId])
+}

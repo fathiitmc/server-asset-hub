@@ -1,0 +1,34 @@
+[
+  {
+    "id": "asset-001",
+    "name": "fathis.com",
+    "type": "DOMAIN",
+    "provider": "Cloudflare",
+    "owner": "Infrastructure",
+    "purchaseDate": "2025-01-12",
+    "renewalDate": "2027-01-12",
+    "purpose": "Primary company domain",
+    "description": "Main public domain used for website and email routing.",
+    "estimatedCost": 14,
+    "currency": "USD",
+    "status": "ACTIVE",
+    "createdAt": "2026-05-27T09:00:00.000Z",
+    "updatedAt": "2026-05-27T09:00:00.000Z"
+  },
+  {
+    "id": "asset-002",
+    "name": "Production VPS",
+    "type": "VPS",
+    "provider": "Hetzner",
+    "owner": "Backend",
+    "purchaseDate": "2025-09-01",
+    "renewalDate": "2026-06-01",
+    "purpose": "Application hosting",
+    "description": "Main server for the MVP application stack.",
+    "estimatedCost": 12.5,
+    "currency": "EUR",
+    "status": "RENEW_SOON",
+    "createdAt": "2026-05-27T09:00:00.000Z",
+    "updatedAt": "2026-05-27T09:00:00.000Z"
+  }
+]

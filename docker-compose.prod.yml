@@ -1,0 +1,32 @@
+services:
+  server-asset-hub:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: server-asset-hub
+    environment:
+      NODE_ENV: production
+      # Reserved for future Prisma migration. The app still uses data/assets.json in this phase.
+      DATABASE_URL: postgresql://server_asset_hub:change-me@postgres:5432/server_asset_hub?schema=public
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/app/data
+      - ./uploads:/app/uploads
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: server-asset-hub-postgres
+    profiles:
+      - postgres
+    environment:
+      POSTGRES_DB: server_asset_hub
+      POSTGRES_USER: server_asset_hub
+      POSTGRES_PASSWORD: change-me
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
