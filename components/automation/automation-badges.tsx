@@ -1,8 +1,8 @@
 import type {
   AutomationExecutionStatus,
+  AutomationRuleStatus,
   AutomationSeverity,
-} from "@prisma/client";
-import type { AutomationRuleStatus } from "@/src/lib/automation/automation-foundation";
+} from "@/src/lib/automation/automation-foundation";
 
 export const automationStatusClasses: Record<AutomationRuleStatus, string> = {
   ACTIVE: "bg-emerald-50 text-emerald-700 ring-emerald-200",

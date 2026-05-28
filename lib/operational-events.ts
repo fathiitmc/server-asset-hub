@@ -1,8 +1,34 @@
-import type {
-  OperationalEventSeverity,
-  OperationalEventSource,
-  OperationalEventType,
-} from "@prisma/client";
+export type OperationalEventSeverity = "INFO" | "WARNING" | "CRITICAL";
+
+export type OperationalEventSource = "SYSTEM" | "USER" | "MONITOR" | "ALERT_ENGINE";
+
+export type OperationalEventType =
+  | "ASSET_CREATED"
+  | "ASSET_UPDATED"
+  | "ASSET_DELETED"
+  | "ALERT_TRIGGERED"
+  | "ALERT_ACKNOWLEDGED"
+  | "SSL_EXPIRY_DETECTED"
+  | "HEALTH_CHECK_RUN"
+  | "HEALTH_DEGRADED"
+  | "RUNTIME_OFFLINE"
+  | "RUNTIME_ONLINE"
+  | "CREDENTIAL_CREATED"
+  | "CREDENTIAL_UPDATED"
+  | "CREDENTIAL_DELETED"
+  | "ATTACHMENT_ADDED"
+  | "ATTACHMENT_DELETED"
+  | "ASSET_ARCHIVED"
+  | "ASSET_RESTORED"
+  | "ASSET_SOFT_DELETED"
+  | "ASSET_PERMANENT_DELETE_ATTEMPT"
+  | "LIFECYCLE_STATE_CHANGED"
+  | "AUTOMATION_RULE_CREATED"
+  | "AUTOMATION_RULE_UPDATED"
+  | "AUTOMATION_RULE_DISABLED"
+  | "AUTOMATION_RULE_DELETED"
+  | "AUTOMATION_EXECUTION_RECORDED"
+  | "SYSTEM_SEEDED";
 
 export type OperationalEventSummary = {
   id: string;

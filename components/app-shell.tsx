@@ -2,6 +2,8 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { logoutAction } from "@/app/login/actions";
 import { getAssetsFromDb } from "@/lib/assets-db";
+import type { Asset } from "@/lib/assets";
+import type { ActiveAlert } from "@/src/lib/alerts/alerts";
 import { getCurrentUser, hasPermission } from "@/src/lib/rbac/permissions";
 import { CommandHint, CommandPalette } from "./command-palette";
 import { SidebarNav, type NavItem } from "./sidebar-nav";
@@ -26,7 +28,7 @@ const navItems: NavItem[] = [
 ];
 
 export async function AppShell({ children }: { children: React.ReactNode }) {
-  async function readActiveAlerts() {
+  async function readActiveAlerts(): Promise<ActiveAlert[]> {
     if (!process.env.DATABASE_URL) {
       return [];
     }
@@ -40,7 +42,7 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   const [assets, alerts, user] = await Promise.all([
-    getAssetsFromDb().catch(() => []),
+    getAssetsFromDb().catch((): Asset[] => []),
     readActiveAlerts(),
     getCurrentUser().catch(() => null),
   ]);

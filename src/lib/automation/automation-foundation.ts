@@ -1,17 +1,37 @@
 import "server-only";
 
-import type {
-  AutomationCategory,
-  AutomationExecutionSource,
-  AutomationExecutionStatus,
-  AutomationSeverity,
-  AutomationTriggerType,
-  Prisma,
-} from "@prisma/client";
 import { createOperationalEvent } from "@/lib/operational-events-db";
 
 export type AutomationRuleStatus =
-  Prisma.AutomationRuleGetPayload<{}>["status"];
+  | "ACTIVE"
+  | "PAUSED"
+  | "DRAFT"
+  | "FAILED"
+  | "DISABLED";
+export type AutomationCategory =
+  | "SCHEDULED_CHECKS"
+  | "RENEWAL_REMINDERS"
+  | "ALERT_ESCALATIONS"
+  | "COST_GOVERNANCE"
+  | "OWNERSHIP_FOLLOW_UPS"
+  | "OPERATIONAL_REVIEWS"
+  | "LIFECYCLE_GOVERNANCE";
+export type AutomationSeverity = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+export type AutomationTriggerType =
+  | "SCHEDULE"
+  | "ALERT"
+  | "RENEWAL"
+  | "COST_THRESHOLD"
+  | "LIFECYCLE_CHANGE"
+  | "MANUAL";
+export type AutomationExecutionStatus =
+  | "QUEUED"
+  | "RUNNING"
+  | "SUCCEEDED"
+  | "FAILED"
+  | "SKIPPED"
+  | "BLOCKED";
+export type AutomationExecutionSource = "MANUAL" | "SCHEDULER" | "SYSTEM" | "PREVIEW";
 
 export type AutomationRuleSummary = {
   id: string;
@@ -97,14 +117,52 @@ export type AutomationInput = {
   status: AutomationRuleStatus;
 };
 
-type RuleRecord = Prisma.AutomationRuleGetPayload<{
-  include: {
-    team: true;
-    triggers: true;
-    schedules: true;
-    executions: { orderBy: { createdAt: "desc" }; take: 10 };
-  };
-}>;
+type RuleRecord = {
+  id: string;
+  name: string;
+  description: string;
+  action: string;
+  status: AutomationRuleStatus;
+  severity: AutomationSeverity;
+  category: AutomationCategory;
+  owner: string;
+  teamId: string | null;
+  escalationOwner: string | null;
+  createdBy: string | null;
+  updatedBy: string | null;
+  deletedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  team: { name: string } | null;
+  triggers: Array<{
+    id: string;
+    type: AutomationTriggerType;
+    label: string;
+    enabled: boolean;
+  }>;
+  schedules: Array<{
+    id: string;
+    label: string;
+    cadence: string;
+    timezone: string;
+    nextRunAt: Date | null;
+    lastRunAt: Date | null;
+    enabled: boolean;
+  }>;
+  executions: Array<{
+    id: string;
+    ruleId: string;
+    status: AutomationExecutionStatus;
+    result: string | null;
+    logs: unknown;
+    triggeredBy: string | null;
+    source: AutomationExecutionSource;
+    startedAt: Date | null;
+    completedAt: Date | null;
+    durationMs: number | null;
+    createdAt: Date;
+  }>;
+};
 
 export const automationStatuses: AutomationRuleStatus[] = [
   "ACTIVE",
@@ -611,10 +669,10 @@ function ruleInclude(take = 10) {
     triggers: { orderBy: { createdAt: "asc" } },
     schedules: { orderBy: { createdAt: "asc" } },
     executions: { orderBy: { createdAt: "desc" }, take },
-  } satisfies Prisma.AutomationRuleInclude;
+  };
 }
 
-function ruleData(input: AutomationInput, actor: string): Prisma.AutomationRuleCreateInput {
+function ruleData(input: AutomationInput, actor: string) {
   return {
     name: input.name,
     description: input.description,
@@ -635,7 +693,7 @@ function ruleData(input: AutomationInput, actor: string): Prisma.AutomationRuleC
 function ruleUpdateData(
   input: AutomationInput,
   actor: string,
-): Prisma.AutomationRuleUpdateInput {
+) {
   return {
     name: input.name,
     description: input.description,

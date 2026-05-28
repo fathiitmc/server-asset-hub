@@ -4,10 +4,27 @@ import type {
   OperationalEventSeverity,
   OperationalEventSource,
   OperationalEventType,
-  Prisma,
-} from "@prisma/client";
+  OperationalEventSummary,
+} from "./operational-events";
 import type { Asset } from "@/lib/assets";
-import type { OperationalEventSummary } from "./operational-events";
+
+type JsonValue =
+  | string
+  | number
+  | boolean
+  | null
+  | JsonValue[]
+  | { [key: string]: JsonValue };
+type EventMetadata = Record<string, unknown>;
+type OperationalEventWhereInput = {
+  assetId?: string;
+  severity?: OperationalEventSeverity;
+  source?: OperationalEventSource;
+  createdAt?: {
+    gte?: Date;
+    lte?: Date;
+  };
+};
 
 export type OperationalEventInput = {
   assetId?: string | null;
@@ -16,7 +33,7 @@ export type OperationalEventInput = {
   severity?: OperationalEventSeverity;
   title: string;
   description: string;
-  metadata?: Prisma.InputJsonValue;
+  metadata?: EventMetadata;
   actor?: string | null;
   source?: OperationalEventSource;
 };
@@ -38,7 +55,7 @@ type OperationalEventRecord = {
   severity: OperationalEventSeverity;
   title: string;
   description: string;
-  metadata: Prisma.JsonValue | null;
+  metadata: EventMetadata | null;
   actor: string | null;
   source: OperationalEventSource;
   createdAt: Date;
@@ -146,7 +163,7 @@ export async function listOperationalEvents(
       return [];
     }
 
-    const where: Prisma.OperationalEventWhereInput = {};
+    const where: OperationalEventWhereInput = {};
 
     if (filters.assetId) {
       where.assetId = filters.assetId;

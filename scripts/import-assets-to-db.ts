@@ -2,8 +2,17 @@ import "dotenv/config";
 
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { PrismaClient, AssetStatus, AssetType } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
+import {
+  assetStatuses,
+  assetTypes,
+  type AssetStatus,
+  type AssetType,
+} from "@/lib/assets";
+
+const { PrismaClient } = require("@prisma/client") as {
+  PrismaClient: new (options: { adapter: PrismaPg }) => any;
+};
 
 const requiredFields = [
   "id",
@@ -106,8 +115,8 @@ function parseOptionalDate(value: unknown, field: "createdAt" | "updatedAt") {
 }
 
 function parseAssetType(value: string, errors: string[]) {
-  if (!Object.values(AssetType).includes(value as AssetType)) {
-    errors.push(`type must be one of: ${Object.values(AssetType).join(", ")}`);
+  if (!assetTypes.includes(value as AssetType)) {
+    errors.push(`type must be one of: ${assetTypes.join(", ")}`);
     return null;
   }
 
@@ -115,10 +124,8 @@ function parseAssetType(value: string, errors: string[]) {
 }
 
 function parseAssetStatus(value: string, errors: string[]) {
-  if (!Object.values(AssetStatus).includes(value as AssetStatus)) {
-    errors.push(
-      `status must be one of: ${Object.values(AssetStatus).join(", ")}`,
-    );
+  if (!assetStatuses.includes(value as AssetStatus)) {
+    errors.push(`status must be one of: ${assetStatuses.join(", ")}`);
     return null;
   }
 

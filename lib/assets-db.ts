@@ -1,7 +1,7 @@
 import "server-only";
 
-import type { Prisma } from "@prisma/client";
 import { ensureOwner, ensureProvider, ensureTags } from "@/lib/asset-registries";
+import type { RegistryOption } from "@/lib/asset-registries";
 import {
   assetEnvironments,
   assetStatuses,
@@ -35,14 +35,57 @@ export type AssetFilters = {
   includeDeleted?: boolean;
 };
 
-type DbAssetWithIntelligence = Prisma.AssetGetPayload<{
-  include: {
-    providerRegistry: true;
-    ownerRegistry: true;
-    team: true;
-    tags: true;
-  };
-}>;
+type DbAssetWithIntelligence = {
+  id: string;
+  name: string;
+  type: string;
+  environment: string | null;
+  provider: string;
+  providerId: string | null;
+  owner: string;
+  ownerId: string | null;
+  teamId: string | null;
+  operationalOwner: string | null;
+  financeOwner: string | null;
+  renewalOwner: string | null;
+  escalationOwner: string | null;
+  region: string | null;
+  domain: string | null;
+  ipAddress: string | null;
+  purchaseDate: Date;
+  renewalDate: Date;
+  purpose: string;
+  description: string;
+  estimatedCost: unknown;
+  currency: string;
+  billingCycle: Asset["billingCycle"];
+  monthlyCost: unknown;
+  yearlyCost: unknown;
+  oneTimeCost: unknown;
+  billingAccount: string | null;
+  costCenter: string | null;
+  costNotes: string | null;
+  lifecycleState: AssetLifecycleState | null;
+  archivedAt: Date | null;
+  archivedBy: string | null;
+  archiveReason: string | null;
+  deletedAt: Date | null;
+  deletedBy: string | null;
+  lifecycleUpdatedAt: Date | null;
+  status: AssetStatus;
+  createdAt: Date;
+  updatedAt: Date;
+  providerRegistry: { name: string } | null;
+  ownerRegistry: { name: string } | null;
+  team: { name: string } | null;
+  tags: Array<{ name: string }>;
+};
+
+type AssetWhereInput = {
+  [key: string]: unknown;
+  AND?: AssetWhereInput[];
+  OR?: AssetWhereInput[];
+};
 
 function dateOnly(value: Date) {
   return value.toISOString().slice(0, 10);
@@ -113,7 +156,11 @@ function dateFromInput(value: string, field: "purchaseDate" | "renewalDate") {
 }
 
 async function inputToDbData(input: AssetInput, mode: "create" | "update") {
-  const [provider, owner, tags] = await Promise.all([
+  const [provider, owner, tags]: [
+    RegistryOption | null,
+    RegistryOption | null,
+    RegistryOption[],
+  ] = await Promise.all([
     ensureProvider(input.provider),
     ensureOwner(input.owner),
     ensureTags(input.tags),
@@ -229,9 +276,9 @@ function filterAssetsFromJson(assets: Asset[], filters: AssetFilters) {
   });
 }
 
-function buildAssetWhere(filters: AssetFilters): Prisma.AssetWhereInput {
-  const where: Prisma.AssetWhereInput = {};
-  const and: Prisma.AssetWhereInput[] = [];
+function buildAssetWhere(filters: AssetFilters): AssetWhereInput {
+  const where: AssetWhereInput = {};
+  const and: AssetWhereInput[] = [];
   const query = filters.q?.trim();
 
   if (!filters.includeDeleted) {

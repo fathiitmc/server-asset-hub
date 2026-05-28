@@ -145,7 +145,10 @@ export async function getActiveAlerts(take = 10) {
 
   return alerts
     .map(mapAlert)
-    .sort((a, b) => severityRank(b.severity) - severityRank(a.severity));
+    .sort(
+      (a: ActiveAlert, b: ActiveAlert) =>
+        severityRank(b.severity) - severityRank(a.severity),
+    );
 }
 
 export async function getAlertSummary() {

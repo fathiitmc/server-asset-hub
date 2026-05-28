@@ -1,6 +1,5 @@
 import "server-only";
 
-import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import type { Asset } from "@/lib/assets";
 import type {
@@ -16,6 +15,15 @@ type HealthCheckRecord = {
   status: string;
   responseTime: number | null;
   checkedAt: Date;
+};
+
+export type AssetHealthSummary = {
+  snapshots: AssetHealthSnapshot[];
+  online: number;
+  offline: number;
+  degraded: number;
+  unknown: number;
+  averageResponseTime: number | null;
 };
 
 function mapHealthSnapshot(check: HealthCheckRecord): AssetHealthSnapshot {
@@ -148,7 +156,9 @@ export async function getRecentHealthChecks(assetId: string, take = 5) {
   return checks.map(mapHealthSnapshot);
 }
 
-export async function getAssetHealthSummary(assetIds: string[]) {
+export async function getAssetHealthSummary(
+  assetIds: string[],
+): Promise<AssetHealthSummary> {
   if (assetIds.length === 0) {
     return {
       snapshots: [],
@@ -160,16 +170,20 @@ export async function getAssetHealthSummary(assetIds: string[]) {
     };
   }
 
-  const latestChecks = await prisma.$queryRaw<HealthCheckRecord[]>`
+  const placeholders = assetIds.map((_, index) => `$${index + 1}`).join(", ");
+  const latestChecks = (await prisma.$queryRawUnsafe(
+    `
     SELECT DISTINCT ON ("assetId")
       "assetId",
       "status",
       "responseTime",
       "checkedAt"
     FROM "AssetHealthCheck"
-    WHERE "assetId" IN (${Prisma.join(assetIds)})
+    WHERE "assetId" IN (${placeholders})
     ORDER BY "assetId", "checkedAt" DESC
-  `;
+    `,
+    ...assetIds,
+  )) as HealthCheckRecord[];
   const latestByAssetId = new Map(
     latestChecks.map((check) => [check.assetId, mapHealthSnapshot(check)]),
   );

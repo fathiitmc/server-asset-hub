@@ -6,6 +6,8 @@ export const metadata: Metadata = {
   description: "Infrastructure asset management dashboard",
 };
 
+export const dynamic = "force-dynamic";
+
 export default function RootLayout({
   children,
 }: Readonly<{

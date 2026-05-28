@@ -1,7 +1,7 @@
 import type { GovernanceUser } from "@/src/lib/rbac/permissions";
 import { roleLabel } from "@/src/lib/rbac/permissions";
 
-const roleClasses = {
+const roleClasses: Record<GovernanceUser["role"], string> = {
   SUPER_ADMIN: "bg-zinc-950 text-white ring-zinc-950",
   ADMIN: "bg-violet-50 text-violet-700 ring-violet-200",
   OPERATOR: "bg-sky-50 text-sky-700 ring-sky-200",

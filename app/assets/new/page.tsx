@@ -6,6 +6,8 @@ import { getAssetRegistryOptions } from "@/lib/asset-registries";
 import { hasPermission, requirePermission } from "@/src/lib/rbac/permissions";
 import { listTeams } from "@/src/lib/rbac/teams";
 
+export const dynamic = "force-dynamic";
+
 export default async function NewAssetPage() {
   const user = await requirePermission("assets:write");
   const [registries, teams] = await Promise.all([

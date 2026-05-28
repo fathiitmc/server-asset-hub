@@ -1,8 +1,27 @@
 import "server-only";
 
 import { redirect } from "next/navigation";
-import type { Team, TeamMembership, UserRole } from "@prisma/client";
 import { getSession } from "@/src/lib/auth/session";
+
+export type UserRole = "SUPER_ADMIN" | "ADMIN" | "OPERATOR" | "FINANCE" | "VIEWER";
+
+export type Team = {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  ownerId: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type TeamMembership = {
+  id: string;
+  userId: string;
+  teamId: string;
+  role: "OWNER" | "MEMBER" | "VIEWER";
+  createdAt: Date;
+};
 
 export type Permission =
   | "dashboard:view"

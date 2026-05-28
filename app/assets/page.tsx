@@ -17,6 +17,8 @@ import {
 import { getAssetsFromDb } from "@/lib/assets-db";
 import { hasPermission, requirePermission } from "@/src/lib/rbac/permissions";
 
+export const dynamic = "force-dynamic";
+
 type AssetsPageProps = {
   searchParams: Promise<{
     q?: string;

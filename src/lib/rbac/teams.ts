@@ -10,6 +10,16 @@ export type TeamSummary = {
   assetCount: number;
 };
 
+type TeamRecord = {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  owner: { email: string } | null;
+  members: unknown[];
+  assets: unknown[];
+};
+
 async function getPrismaClient() {
   if (!process.env.DATABASE_URL) {
     return null;
@@ -35,7 +45,7 @@ export async function listTeams(): Promise<TeamSummary[]> {
     },
   });
 
-  return teams.map((team) => ({
+  return (teams as TeamRecord[]).map((team) => ({
     id: team.id,
     name: team.name,
     slug: team.slug,
