@@ -18,6 +18,13 @@ import { AssetRuntimePanel } from "@/components/runtime/asset-runtime-panel";
 import { AssetAttentionPanel } from "@/components/warnings/asset-attention-panel";
 import { PageHeader } from "@/components/page-header";
 import { getAssetRegistryOptions } from "@/lib/asset-registries";
+import {
+  assetEnvironments,
+  assetRegions,
+  assetStatuses,
+  assetTypes,
+  billingCycles,
+} from "@/lib/assets";
 import { getAssetByIdFromDb } from "@/lib/assets-db";
 import { listAssetOperationalEvents } from "@/lib/operational-events-db";
 import { getAssetRiskProfile } from "@/lib/operational-risk";
@@ -165,6 +172,13 @@ export default async function AssetPage({ params }: AssetPageProps) {
               asset={asset}
               submitLabel="Save changes"
               canViewFinance={canViewFinance}
+              options={{
+                assetTypes,
+                assetStatuses,
+                assetEnvironments,
+                assetRegions,
+                billingCycles,
+              }}
               registries={{ ...registries, teams }}
             />
           ) : (

@@ -3,6 +3,13 @@ import { AppShell } from "@/components/app-shell";
 import { AssetForm } from "@/components/asset-form";
 import { PageHeader } from "@/components/page-header";
 import { getAssetRegistryOptions } from "@/lib/asset-registries";
+import {
+  assetEnvironments,
+  assetRegions,
+  assetStatuses,
+  assetTypes,
+  billingCycles,
+} from "@/lib/assets";
 import { hasPermission, requirePermission } from "@/src/lib/rbac/permissions";
 import { listTeams } from "@/src/lib/rbac/teams";
 
@@ -25,6 +32,13 @@ export default async function NewAssetPage() {
         action={createAssetAction}
         submitLabel="Create asset"
         canViewFinance={hasPermission(user.role, "finance:view")}
+        options={{
+          assetTypes,
+          assetStatuses,
+          assetEnvironments,
+          assetRegions,
+          billingCycles,
+        }}
         registries={{ ...registries, teams }}
       />
     </AppShell>

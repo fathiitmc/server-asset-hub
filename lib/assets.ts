@@ -13,6 +13,7 @@ export const assetTypes = [
   "CONTAINER",
   "DATABASE",
   "VPN",
+  "VPS",
   "OTHER",
 ] as const;
 
@@ -67,7 +68,6 @@ export type BillingCycle = (typeof billingCycles)[number];
 
 export function normalizeAssetType(type: string): AssetType {
   const legacyMap: Record<string, AssetType> = {
-    VPS: "SERVER",
     HOSTING: "SERVER",
     PANEL: "OTHER",
   };
@@ -224,11 +224,15 @@ export function normalizeAsset(asset: Asset): Asset {
   };
 }
 
+function dateOrDefault(formData: FormData, key: keyof AssetInput, fallback: Date) {
+  return textValue(formData, key) || fallback.toISOString().slice(0, 10);
+}
+
 export function assetInputFromFormData(formData: FormData): AssetInput {
   const type = formData.get("type");
   const status = formData.get("status");
   const lifecycleState = formData.get("lifecycleState");
-  const environment = formData.get("environment");
+  const environment = formData.get("environment") ?? "PRODUCTION";
   const billingCycle = formData.get("billingCycle");
   const cost = Number.parseFloat(textValue(formData, "estimatedCost"));
   const monthlyCost = Number.parseFloat(textValue(formData, "monthlyCost"));
@@ -262,6 +266,11 @@ export function assetInputFromFormData(formData: FormData): AssetInput {
   const normalizedMonthlyCost = Number.isFinite(monthlyCost)
     ? monthlyCost
     : normalizedYearlyCost / 12;
+  const now = new Date();
+  const defaultRenewalDate = new Date(now);
+  defaultRenewalDate.setUTCFullYear(defaultRenewalDate.getUTCFullYear() + 1);
+  const purpose =
+    textValue(formData, "purpose") || "Asset registered from quick create";
 
   return {
     name: textValue(formData, "name"),
@@ -281,9 +290,9 @@ export function assetInputFromFormData(formData: FormData): AssetInput {
     domain: textValue(formData, "domain"),
     ipAddress: textValue(formData, "ipAddress"),
     tags: tagValues(formData),
-    purchaseDate: textValue(formData, "purchaseDate"),
-    renewalDate: textValue(formData, "renewalDate"),
-    purpose: textValue(formData, "purpose"),
+    purchaseDate: dateOrDefault(formData, "purchaseDate", now),
+    renewalDate: dateOrDefault(formData, "renewalDate", defaultRenewalDate),
+    purpose,
     description: textValue(formData, "description"),
     estimatedCost: normalizedCost,
     currency: textValue(formData, "currency") || "USD",
