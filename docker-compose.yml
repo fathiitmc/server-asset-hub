@@ -6,6 +6,8 @@ services:
     container_name: server-asset-hub
     environment:
       DATABASE_URL: postgresql://server_asset_hub:server_asset_hub_dev@postgres:5432/server_asset_hub?schema=public
+      JWT_SECRET: change-this-to-a-long-random-server-secret
+      ENCRYPTION_KEY: change-this-to-a-32-byte-secret-key
     ports:
       - "3010:3000"
     volumes:
